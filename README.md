@@ -1,6 +1,12 @@
-# 🎨 Realtime Whiteboard - MERN Stack Collaboration App
+# 🎨 CanvasHub - MERN Stack Collaboration App
 
 A real-time collaborative whiteboard application built with the MERN stack (MongoDB, Express.js, React, Node.js) and Socket.IO for real-time communication.
+
+## 📸 Product Screenshots
+
+![Whiteboard Interface](/frontend/public/project_images/1.png)
+![Room Management](/frontend/public/project_images/2.png)
+![Live Collaboration](/frontend/public/project_images/3.png)
 
 ## ✨ Features
 
@@ -19,7 +25,7 @@ A real-time collaborative whiteboard application built with the MERN stack (Mong
 
 ### Frontend
 
-- **React** (v19) with TypeScript
+- **React** (v19) 
 - **Socket.IO Client** for real-time communication
 - **Konva.js** for canvas manipulation
 - **TailwindCSS** for styling
@@ -49,7 +55,7 @@ A real-time collaborative whiteboard application built with the MERN stack (Mong
 
 ```bash
 git clone <your-repo-url>
-cd Realtime-Whiteboard
+cd CanvasHub
 ```
 
 2. **Backend Setup**
@@ -74,7 +80,7 @@ cd frontend
 npm install
 
 # Create a .env file with:
-VITE_API_URL=http://localhost:5000 || your_deployed_backend_url
+VITE_API_URL=http://localhost:5000 or your_deployed_backend_url
 
 # Start the development server
 npm run dev
