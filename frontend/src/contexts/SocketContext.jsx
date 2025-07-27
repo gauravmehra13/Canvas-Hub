@@ -9,7 +9,6 @@ export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const BaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   useEffect(() => {
-    console.log('Auth state:', user); // Check if this is true when expected
     
     if (user) {
       const newSocket = io(BaseUrl, {

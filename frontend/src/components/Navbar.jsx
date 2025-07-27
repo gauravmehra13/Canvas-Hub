@@ -15,8 +15,7 @@ const Navbar = () => {
       toast.success('Logged out successfully');
     } catch (error) {
       console.error('Logout failed:', error);
-      // Still navigate to login even if the API call fails
-      navigate('/login');
+      toast.error('Logout failed');
     }
   };
 

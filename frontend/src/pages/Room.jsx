@@ -7,6 +7,7 @@ import { theme, commonClasses } from '../styles/theme';
 import Whiteboard from '../components/Whiteboard';
 import Chat from '../components/Chat';
 import api from '../api';
+import { toast } from 'react-toastify';
 
 const Room = () => {
   const { id } = useParams();
@@ -21,6 +22,7 @@ const Room = () => {
         const res = await api.get(`/rooms/${id}`);
         setRoom(res.data);
       } catch (err) {
+        toast.error('Failed to fetch room');
         console.error('Failed to fetch room', err);
       }
     };
