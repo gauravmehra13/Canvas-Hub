@@ -74,7 +74,7 @@ cd frontend
 npm install
 
 # Create a .env file with:
-VITE_API_URL=http://localhost:5000
+VITE_API_URL=http://localhost:5000 || your_deployed_backend_url
 
 # Start the development server
 npm run dev
@@ -113,36 +113,12 @@ npm run dev
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret_key
+CLIENT_URL=your_frontend_url
+
 ```
 
 ### Frontend (.env)
 
 ```
-VITE_API_URL=http://localhost:5000/api
-```
-
-## 🏗️ Project Structure
-
-```
-Realtime Whiteboard/
-├── backend/
-│   ├── config/
-│   ├── controllers/
-│   ├── middleware/
-│   ├── models/
-│   ├── routes/
-│   ├── sockets/
-│   └── server.js
-│
-└── frontend/
-    ├── src/
-    │   ├── components/
-    │   │   ├── atoms/
-    │   │   ├── molecules/
-    │   │   └── organisms/
-    │   ├── lib/
-    │   ├── pages/
-    │   ├── services/
-    │   └── styles/
-    └── vite.config.ts
+VITE_API_URL=http://localhost:5000 || your_actual_backend_url
 ```
