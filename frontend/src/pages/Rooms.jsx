@@ -6,7 +6,6 @@ import {
   ArrowRight,
   RefreshCw,
   Lock,
-  Loader2,
   Palette,
   Trash2,
 } from "lucide-react";
@@ -17,6 +16,7 @@ import DeleteRoomModal from "../components/DeleteRoomModal";
 import api from "../api";
 import toast from "react-hot-toast";
 import { useAuth } from "../hooks/useAuth";
+import Loader from "../components/Loader";
 
 const Rooms = () => {
   const [rooms, setRooms] = useState([]);
@@ -106,11 +106,7 @@ const Rooms = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className={commonClasses.flexCenter + " h-[calc(100vh-3.5rem)]"}>
-        <Loader2 className={"h-8 w-8 text-blue-600 " + animations.spinner} />
-      </div>
-    );
+    return <Loader />;
   }
 
   return (
@@ -196,17 +192,17 @@ const Rooms = () => {
                     <div className="flex items-center gap-2">
                       {user && room.createdBy === user.id && (
                         <button
-                                                      onClick={(e) => handleDeleteClick(e, room)}
-                            className={
-                              commonClasses.iconButton +
-                              " text-white hover:text-red-500 transition-colors"
-                            }
-                            title="Delete room"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
-                        <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                          onClick={(e) => handleDeleteClick(e, room)}
+                          className={
+                            commonClasses.iconButton +
+                            " text-white hover:text-red-500 transition-colors"
+                          }
+                          title="Delete room"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                      <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
                     </div>
                   </div>
 

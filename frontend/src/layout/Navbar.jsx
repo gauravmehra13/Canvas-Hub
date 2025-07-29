@@ -30,7 +30,6 @@ const Navbar = () => {
         {user && (
           <div className={commonClasses.flexBetween + " flex-1"}>
             <div className="flex items-center space-x-2">
-              {/* Add any navigation links here */}
             </div>
             
             <div className="flex items-center space-x-4">
