@@ -8,6 +8,13 @@ import Register from './pages/Register';
 import Rooms from './pages/Rooms';
 import Room from './pages/Room';
 import PrivateRoute from './components/PrivateRoute';
+import PublicRoute from './components/PublicRoute';
+import { useAuth } from './hooks/useAuth';
+
+const RootRedirect = () => {
+  const { user } = useAuth();
+  return <Navigate to={user ? "/rooms" : "/login"} />;
+};
 
 function App() {
   return (
@@ -29,11 +36,11 @@ function App() {
             <Navbar />
             <main className="flex-1 overflow-auto">
               <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+                <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+                <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
                 <Route path="/rooms" element={<PrivateRoute><Rooms /></PrivateRoute>} />
                 <Route path="/rooms/:id" element={<PrivateRoute><Room /></PrivateRoute>} />
-                <Route path="/" element={<Navigate to="/login" />} />
+                <Route path="/" element={<RootRedirect />} />
               </Routes>
             </main>
           </div>

@@ -16,7 +16,7 @@ import JoinRoomModal from "../components/JoinRoomModal";
 import DeleteRoomModal from "../components/DeleteRoomModal";
 import api from "../api";
 import toast from "react-hot-toast";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 
 const Rooms = () => {
   const [rooms, setRooms] = useState([]);

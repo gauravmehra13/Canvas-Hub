@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSocket } from '../contexts/SocketContext';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from './useAuth';
 import toast from 'react-hot-toast';
 
 export const useRoom = (roomId) => {
