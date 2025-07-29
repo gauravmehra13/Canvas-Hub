@@ -1,28 +1,41 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Users, ArrowRight, RefreshCw, Lock, Loader2, Palette } from 'lucide-react';
-import { theme, commonClasses, animations } from '../styles/theme';
-import CreateRoomModal from '../components/CreateRoomModal';
-import JoinRoomModal from '../components/JoinRoomModal';
-import api from '../api';
-import toast from 'react-hot-toast';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Plus,
+  Users,
+  ArrowRight,
+  RefreshCw,
+  Lock,
+  Loader2,
+  Palette,
+  Trash2,
+} from "lucide-react";
+import { theme, commonClasses, animations } from "../styles/theme";
+import CreateRoomModal from "../components/CreateRoomModal";
+import JoinRoomModal from "../components/JoinRoomModal";
+import DeleteRoomModal from "../components/DeleteRoomModal";
+import api from "../api";
+import toast from "react-hot-toast";
+import { useAuth } from "../contexts/AuthContext";
 
 const Rooms = () => {
   const [rooms, setRooms] = useState([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
+  const [roomToDelete, setRoomToDelete] = useState(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const fetchRooms = async () => {
     try {
       setIsRefreshing(true);
-      const res = await api.get('/rooms');
+      const res = await api.get("/rooms");
       setRooms(res.data);
     } catch (error) {
-      setError('Failed to fetch rooms: ' + error.message);
+      setError("Failed to fetch rooms: " + error.message);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -35,24 +48,27 @@ const Rooms = () => {
 
   const handleCreateRoom = async (formData) => {
     try {
-      const res = await api.post('/rooms', formData);
+      const res = await api.post("/rooms", formData);
       setRooms([...rooms, res.data]);
       setShowCreateModal(false);
-      toast.success('Room created successfully');
-      
+      toast.success("Room created successfully");
+
       if (formData.isPrivate) {
-        localStorage.setItem(`room_${res.data._id}_password`, formData.password);
+        localStorage.setItem(
+          `room_${res.data._id}_password`,
+          formData.password
+        );
       }
-      
+
       navigate(`/rooms/${res.data._id}`);
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to create room');
+      toast.error(err.response?.data?.error || "Failed to create room");
     }
   };
 
   const handleJoinRoom = (room) => {
     if (room.activeUsers >= room.maxUsers) {
-      toast.error('This room is full');
+      toast.error("This room is full");
       return;
     }
 
@@ -70,6 +86,25 @@ const Rooms = () => {
     navigate(`/rooms/${selectedRoom._id}`);
   };
 
+  const handleDeleteClick = (e, room) => {
+    e.stopPropagation(); // Prevent room join when clicking delete
+    setRoomToDelete(room);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!roomToDelete) return;
+
+    try {
+      await api.delete(`/rooms/${roomToDelete._id}`);
+      setRooms(rooms.filter((room) => room._id !== roomToDelete._id));
+      toast.success("Room deleted successfully");
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to delete room");
+    } finally {
+      setRoomToDelete(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className={commonClasses.flexCenter + " h-[calc(100vh-3.5rem)]"}>
@@ -81,7 +116,7 @@ const Rooms = () => {
   return (
     <div className={theme.layout.section}>
       <div className={theme.layout.container}>
-      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
               <Palette className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -100,7 +135,11 @@ const Rooms = () => {
               className={theme.button.secondary}
               title="Refresh rooms list"
             >
-              <RefreshCw className={"h-4 w-4 " + (isRefreshing ? animations.spinner : "")} />
+              <RefreshCw
+                className={
+                  "h-4 w-4 " + (isRefreshing ? animations.spinner : "")
+                }
+              />
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
@@ -113,7 +152,7 @@ const Rooms = () => {
         </div>
 
         {error && <div className={theme.text.error + " mb-6"}>{error}</div>}
-        
+
         {rooms.length === 0 ? (
           <div className={theme.card.base + " p-8"}>
             <div className="max-w-md mx-auto text-center">
@@ -124,7 +163,8 @@ const Rooms = () => {
                 No rooms available
               </h3>
               <p className={theme.text.subtitle}>
-                Create your first room to start collaborating with others in real-time.
+                Create your first room to start collaborating with others in
+                real-time.
               </p>
               <button
                 onClick={() => setShowCreateModal(true)}
@@ -144,7 +184,7 @@ const Rooms = () => {
                 className={`${theme.card.base} ${theme.card.interactive} p-4 relative overflow-hidden`}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-blue-600/0 to-blue-600/0 group-hover:from-blue-600/5 group-hover:via-blue-600/5 group-hover:to-blue-600/0 transition-all duration-300" />
-                
+
                 <div className="relative">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
@@ -153,12 +193,28 @@ const Rooms = () => {
                         <Lock className="h-4 w-4 text-amber-500" />
                       )}
                     </h3>
-                    <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                    <div className="flex items-center gap-2">
+                      {user && room.createdBy === user.id && (
+                        <button
+                                                      onClick={(e) => handleDeleteClick(e, room)}
+                            className={
+                              commonClasses.iconButton +
+                              " text-white hover:text-red-500 transition-colors"
+                            }
+                            title="Delete room"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                        <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                    </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <Users className="h-4 w-4" />
-                    <span className="flex-1">{room.activeUsers}/{room.maxUsers} users</span>
+                    <span className="flex-1">
+                      {room.activeUsers}/{room.maxUsers} users
+                    </span>
                     {room.activeUsers >= room.maxUsers && (
                       <span className="px-2 py-1 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded">
                         Full
@@ -186,6 +242,13 @@ const Rooms = () => {
           onSubmit={handleJoinPrivateRoom}
         />
       )}
+
+      <DeleteRoomModal
+        isOpen={roomToDelete !== null}
+        onClose={() => setRoomToDelete(null)}
+        onConfirm={handleDeleteConfirm}
+        roomName={roomToDelete?.name}
+      />
     </div>
   );
 };

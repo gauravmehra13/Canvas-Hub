@@ -5,12 +5,14 @@ const {
   createRoom,
   getAllRooms,
   getRoomById,
-  leaveRoom
+  leaveRoom,
+  deleteRoom
 } = require('../controllers/roomController');
 
 router.post("/", auth, createRoom);
 router.get("/", auth, getAllRooms);
 router.get("/:id", auth, getRoomById);
 router.post("/:id/leave", auth, leaveRoom);
+router.delete("/:id", auth, deleteRoom);
 
 module.exports = router;

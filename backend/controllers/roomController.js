@@ -64,3 +64,23 @@ exports.leaveRoom = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 }; 
+
+// Delete room
+exports.deleteRoom = async (req, res) => {
+  try {
+    const room = await Room.findById(req.params.id);
+    if (!room) {
+      return res.status(404).json({ error: "Room not found" });
+    }
+
+    // Check if the requesting user is the creator of the room
+    if (room.createdBy.toString() !== req.user.id) {
+      return res.status(403).json({ error: "Not authorized to delete this room" });
+    }
+
+    await Room.findByIdAndDelete(req.params.id);
+    res.json({ message: "Room deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}; 
