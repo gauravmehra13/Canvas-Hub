@@ -33,8 +33,13 @@ mongoose.connect(process.env.MONGODB_URI, {
 .catch(err => console.error('MongoDB connection error:', err));
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/rooms', require('./routes/rooms'));
+const authRoutes = require('./routes/auth');
+const roomRoutes = require('./routes/rooms');
+const drawingRoutes = require('./routes/drawings');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/rooms', roomRoutes);
+app.use('/api/rooms', drawingRoutes); // Mount drawing routes under /api/rooms
 
 // Socket.io connection handling
 require('./sockets')(io);

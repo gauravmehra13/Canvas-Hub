@@ -7,7 +7,7 @@ import { theme, commonClasses } from '../styles/theme';
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  console.log(user);
+  
   const handleLogout = async () => {
     try {
       await logout();
