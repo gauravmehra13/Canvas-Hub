@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useSocket } from "../contexts/SocketContext";
+import { useSocket } from "../hooks/useSocket";
 import { useRoom } from "../hooks/useRoom";
 import { ArrowLeft, Users, Lock, LogOut } from "lucide-react";
 import { theme, commonClasses } from "../styles/theme";

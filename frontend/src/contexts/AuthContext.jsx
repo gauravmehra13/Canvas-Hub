@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from 'react';
-import api from '../api';
+import authService from '../services/authService';
 
 const AuthContext = createContext();
 
@@ -18,42 +18,20 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (username, password) => {
-    try {
-      const response = await api.post('/auth/login', { username, password });
-      const { token, user } = response.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
-      return user;
-    } catch (error) {
-      throw error.response?.data?.error || 'Login failed';
-    }
+    const { user } = await authService.login(username, password);
+    setUser(user);
+    return user;
   };
 
   const register = async (username, password) => {
-    try {
-      const response = await api.post('/auth/register', { username, password });
-      const { token, user } = response.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
-      return user;
-    } catch (error) {
-      throw error.response?.data?.error || 'Registration failed';
-    }
+    const { user } = await authService.register(username, password);
+    setUser(user);
+    return user;
   };
 
   const logout = async () => {
-    try {
-      await api.post('/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      // Clear local state even if the API call fails
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setUser(null);
-    }
+    await authService.logout();
+    setUser(null);
   };
 
   const value = {

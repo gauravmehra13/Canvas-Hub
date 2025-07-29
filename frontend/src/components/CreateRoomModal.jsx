@@ -75,7 +75,7 @@ const CreateRoomModal = ({ onClose, onSubmit }) => {
                 onChange={(e) => setFormData({ ...formData, isPrivate: e.target.checked })}
                 className="rounded border-gray-300"
               />
-              <label htmlFor="isPrivate" className="flex items-center gap-2 cursor-pointer">
+              <label htmlFor="isPrivate" className="flex items-center gap-2 cursor-pointer text-gray-200">
                 <Lock className="h-4 w-4" />
                 Private Room
               </label>

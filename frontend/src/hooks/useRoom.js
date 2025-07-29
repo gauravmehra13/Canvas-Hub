@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSocket } from '../contexts/SocketContext';
+import { useSocket } from './useSocket';
 import { useAuth } from './useAuth';
 import toast from 'react-hot-toast';
 

@@ -19,6 +19,7 @@ export const theme = {
     subtitle: "text-sm text-gray-500 dark:text-gray-400",
     body: "text-gray-600 dark:text-gray-300",
     error: "text-sm font-medium text-red-600 dark:text-red-400",
+    label: "text-sm font-medium text-gray-900 dark:text-gray-300",
   },
   layout: {
     page: "min-h-screen bg-gray-50 dark:bg-gray-900",
