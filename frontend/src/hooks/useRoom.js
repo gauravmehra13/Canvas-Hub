@@ -68,11 +68,16 @@ export const useRoom = (roomId) => {
     socket?.emit('draw', data);
   };
 
+  const leaveRoom = () => {
+    socket?.emit('leaveRoom', roomId);
+  };
+
   return {
     activeUsers,
     messages,
     canvasData,
     sendMessage,
-    sendDrawing
+    sendDrawing,
+    leaveRoom
   };
 };

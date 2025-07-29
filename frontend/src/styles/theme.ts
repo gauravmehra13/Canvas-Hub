@@ -1,8 +1,9 @@
 export const theme = {
   button: {
-    primary: "bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center gap-2 shadow-sm",
-    secondary: "bg-gray-100 text-gray-900 px-4 py-2.5 rounded-lg hover:bg-gray-200 transition-colors duration-300 flex items-center justify-center gap-2",
-    destructive: "bg-red-600 text-white px-4 py-2.5 rounded-lg hover:bg-red-700 transition-colors duration-300 flex items-center justify-center gap-2",
+    primary: "cursor-pointer bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center gap-2 shadow-sm",
+    secondary: "cursor-pointer bg-gray-100 text-gray-900 px-4 py-2.5 rounded-lg hover:bg-gray-200 transition-colors duration-300 flex items-center justify-center gap-2",
+    destructive: "cursor-pointer bg-red-600 text-white px-4 py-2.5 rounded-lg hover:bg-red-700 transition-colors duration-300 flex items-center justify-center gap-2",
+    danger: "cursor-pointer bg-red-600 text-white px-4 py-2.5 rounded-lg hover:bg-red-700 transition-colors duration-300 flex items-center justify-center gap-2",
   },
   card: {
     base: "bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-300",
@@ -37,7 +38,7 @@ export const commonClasses = {
   flexBetween: "flex items-center justify-between",
   flexStart: "flex items-center justify-start",
   gridCards: "grid gap-4 md:grid-cols-2 lg:grid-cols-3",
-  iconButton: "rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors",
+  iconButton: "cursor-pointer rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors",
 } as const;
 
 export const animations = {

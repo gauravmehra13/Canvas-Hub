@@ -11,6 +11,24 @@ const RoomSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  maxUsers: {
+    type: Number,
+    default: 10
+  },
+  activeUsers: {
+    type: Number,
+    default: 0
+  },
+  isPrivate: {
+    type: Boolean,
+    default: false
+  },
+  password: {
+    type: String,
+    required: function() {
+      return this.isPrivate;
+    }
+  },
   createdAt: {
     type: Date,
     default: Date.now

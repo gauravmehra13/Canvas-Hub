@@ -15,7 +15,7 @@ const ToolButton = ({ isActive, onClick, children, title, isDisabled }) => (
   <button
     onClick={onClick}
     disabled={isDisabled}
-    className={`p-2 rounded-lg transition-all duration-200 ${
+    className={`cursor-pointer p-2 rounded-lg transition-all duration-200 ${
       isDisabled 
         ? 'opacity-50 cursor-not-allowed' 
         : isActive

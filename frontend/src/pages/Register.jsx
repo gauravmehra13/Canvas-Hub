@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { UserPlus, User, Lock } from 'lucide-react';
 import { theme, commonClasses } from '../styles/theme';
-import api from '../api';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -11,7 +10,8 @@ const Register = () => {
     password: ''
   });
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const { register, login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -23,12 +23,19 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
     try {
-      const res = await api.post('/auth/register', formData);
-      login(res.data.token);
+      // First register
+      await register(formData.username, formData.password);
+      // Then login to ensure all auth states are properly set
+      await login(formData.username, formData.password);
       navigate('/rooms');
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed');
+      setError(err.message || 'Registration failed');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -59,6 +66,7 @@ const Register = () => {
                 onChange={handleChange}
                 placeholder="Username"
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -74,12 +82,26 @@ const Register = () => {
                 onChange={handleChange}
                 placeholder="Password"
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
 
-          <button type="submit" className={theme.button.primary + " w-full"}>
-            Create Account
+          <button 
+            type="submit" 
+            className={theme.button.primary + " w-full relative"} 
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <span className="opacity-0">Create Account</span>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                </div>
+              </>
+            ) : (
+              'Create Account'
+            )}
           </button>
         </form>
 
