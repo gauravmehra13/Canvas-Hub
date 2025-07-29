@@ -55,7 +55,7 @@ A real-time collaborative whiteboard application built with the MERN stack (Mong
 
 ```bash
 git clone <your-repo-url>
-cd CanvasHub
+cd Canvas-Hub
 ```
 
 2. **Backend Setup**
