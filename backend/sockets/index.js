@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Room = require('../models/Room');
+const Message = require('../models/Message');
 
 module.exports = (io) => {
   // Store active users and their rooms with socket ID as key
@@ -149,16 +151,31 @@ module.exports = (io) => {
     });
     
     // Chat messages
-    socket.on('sendMessage', (message) => {
+    socket.on('sendMessage', async (message) => {
       const userData = activeUsers.get(socket.id);
       if (!userData) return;
-      
-      io.to(userData.roomId).emit('newMessage', {
-        userId: userData.userId,
-        username: userData.username,
-        message,
-        timestamp: new Date()
-      });
+
+      try {
+        // Create and save message to database
+        const newMessage = new Message({
+          roomId: userData.roomId,
+          username: userData.username,
+          message: message,
+          timestamp: new Date()
+        });
+        await newMessage.save();
+
+        // Emit to all users in room
+        io.to(userData.roomId).emit('newMessage', {
+          userId: userData.userId,
+          username: userData.username,
+          message,
+          timestamp: newMessage.timestamp
+        });
+      } catch (error) {
+        console.error('Error saving message:', error);
+        socket.emit('error', 'Failed to send message');
+      }
     });
 
     // Explicit leave room

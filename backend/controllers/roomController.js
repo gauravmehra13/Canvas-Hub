@@ -1,4 +1,5 @@
-const Room = require('../models/Room');
+const Room = require("../models/Room");
+const Message = require("../models/Message");
 
 // Create a room
 exports.createRoom = async (req, res) => {
@@ -26,7 +27,7 @@ exports.createRoom = async (req, res) => {
 exports.getAllRooms = async (req, res) => {
   try {
     const rooms = await Room.find({ isActive: true })
-      .select('-password') // Exclude password field
+      .select("-password") // Exclude password field
       .lean(); // Convert to plain objects for better performance
     res.json(rooms);
   } catch (err) {
@@ -37,8 +38,7 @@ exports.getAllRooms = async (req, res) => {
 // Get room by ID
 exports.getRoomById = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id)
-      .select('-password'); // Exclude password field
+    const room = await Room.findById(req.params.id).select("-password"); // Exclude password field
     if (!room) return res.status(404).json({ error: "Room not found" });
     res.json(room);
   } catch (err) {
@@ -63,7 +63,7 @@ exports.leaveRoom = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-}; 
+};
 
 // Delete room
 exports.deleteRoom = async (req, res) => {
@@ -75,7 +75,9 @@ exports.deleteRoom = async (req, res) => {
 
     // Check if the requesting user is the creator of the room
     if (room.createdBy.toString() !== req.user.id) {
-      return res.status(403).json({ error: "Not authorized to delete this room" });
+      return res
+        .status(403)
+        .json({ error: "Not authorized to delete this room" });
     }
 
     await Room.findByIdAndDelete(req.params.id);
@@ -83,4 +85,27 @@ exports.deleteRoom = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-}; 
+};
+
+// Get chat history for a room
+exports.getChatHistory = async (req, res) => {
+  try {
+    const roomId = req.params.id;
+
+    const room = await Room.findById(roomId);
+    if (!room) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    const messages = await Message.find({ roomId })
+      .sort({ timestamp: -1 })
+      .limit(parseInt(req.query.limit || 50))
+      .select("username message timestamp")
+      .lean();
+
+    res.json(messages.reverse());
+  } catch (error) {
+    console.error("Error fetching chat history:", error);
+    res.status(500).json({ message: "Failed to fetch chat history" });
+  }
+};

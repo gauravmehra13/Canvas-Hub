@@ -71,10 +71,17 @@ const Chat = ({ messages, sendMessage, activeUsers }) => {
                     {msg.username}
                   </span>
                   <span className="text-xs text-gray-500">
-                    {new Date().toLocaleTimeString()}
+                    {new Date(msg.timestamp).toLocaleTimeString()}
                   </span>
+                  {msg.pending && (
+                    <span className="text-xs text-gray-500 italic">
+                      sending...
+                    </span>
+                  )}
                 </div>
-                <p className="text-gray-600 dark:text-gray-300 text-sm bg-gray-50 dark:bg-gray-700 rounded-lg p-2">
+                <p className={`text-gray-600 dark:text-gray-300 text-sm bg-gray-50 dark:bg-gray-700 rounded-lg p-2 ${
+                  msg.pending ? 'opacity-70' : ''
+                }`}>
                   {msg.message}
                 </p>
               </div>

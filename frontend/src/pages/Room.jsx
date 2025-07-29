@@ -8,14 +8,33 @@ import Whiteboard from "../components/Whiteboard";
 import Chat from "../components/Chat";
 import api from "../api";
 import toast from "react-hot-toast";
+import chatService from "../services/chatService";
 
 const Room = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const socket = useSocket();
   const [room, setRoom] = useState(null);
-  const { activeUsers, messages, sendMessage, sendDrawing, leaveRoom } = useRoom(id);
+  const { activeUsers, messages, sendMessage, sendDrawing, leaveRoom } =
+    useRoom(id);
   const [isJoining, setIsJoining] = useState(true);
+  const [chatHistory, setChatHistory] = useState([]);
+
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      try {
+        const response = await chatService.getChatHistory(id);
+        setChatHistory(response.data);
+      } catch (err) {
+        console.error("Failed to load chat history:", err);
+        toast.error("Failed to load chat history");
+      }
+    };
+
+    if (!isJoining) {
+      loadChatHistory();
+    }
+  }, [id, isJoining]);
 
   useEffect(() => {
     const fetchRoom = async () => {
@@ -23,47 +42,46 @@ const Room = () => {
         const res = await api.get(`/rooms/${id}`);
         const roomData = res.data;
 
-        // Check if room is full before attempting to join
+        // Check if room is full
         if (roomData.activeUsers >= roomData.maxUsers) {
-          toast.error('This room is full');
-          navigate('/rooms');
+          toast.error("This room is full");
+          navigate("/rooms");
           return;
         }
 
         setRoom(roomData);
 
-        // Attempt to join room
         if (socket) {
           const password = localStorage.getItem(`room_${id}_password`);
-          
+
           // Set up error handler before emitting join
           const handleError = (error) => {
             toast.error(error);
-            navigate('/rooms');
+            navigate("/rooms");
           };
-          socket.on('error', handleError);
+          socket.on("error", handleError);
 
           // Set up success handler
           const handleJoinSuccess = (data) => {
             if (data.activeUsers?.length >= roomData.maxUsers) {
-              socket.off('error', handleError);
-              socket.off('userJoined', handleJoinSuccess);
-              toast.error('Room is full');
-              navigate('/rooms');
+              socket.off("error", handleError);
+              socket.off("userJoined", handleJoinSuccess);
+              toast.error("Room is full");
+              navigate("/rooms");
               return;
             }
             setIsJoining(false);
-            socket.off('error', handleError);
-            socket.off('userJoined', handleJoinSuccess);
+            socket.off("error", handleError);
+            socket.off("userJoined", handleJoinSuccess);
           };
-          socket.on('userJoined', handleJoinSuccess);
+          socket.on("userJoined", handleJoinSuccess);
 
           // Attempt to join
           socket.emit("joinRoom", { roomId: id, password });
         }
       } catch (err) {
         toast.error("Failed to fetch room");
-        navigate('/rooms');
+        navigate("/rooms");
       }
     };
 
@@ -73,8 +91,8 @@ const Room = () => {
       if (socket) {
         socket.emit("leaveRoom", id);
         // Clean up any remaining listeners
-        socket.off('error');
-        socket.off('userJoined');
+        socket.off("error");
+        socket.off("userJoined");
       }
     };
   }, [socket, id, navigate]);
@@ -83,13 +101,13 @@ const Room = () => {
     try {
       // Update database
       await api.post(`/rooms/${id}/leave`);
-      
+
       // Use the leaveRoom function from useRoom hook
       leaveRoom();
-      
+
       // Clear stored password
       localStorage.removeItem(`room_${id}_password`);
-      
+
       // Navigate back to rooms list
       navigate("/rooms");
       toast.success("Left room successfully");
@@ -131,7 +149,9 @@ const Room = () => {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <Users className="h-4 w-4" />
-                <span>{activeUsers.length}/{room.maxUsers} users</span>
+                <span>
+                  {activeUsers.length}/{room.maxUsers} users
+                </span>
               </div>
               <button
                 onClick={handleLeaveRoom}
@@ -155,7 +175,7 @@ const Room = () => {
             </div>
             <div className="w-96 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <Chat
-                messages={messages}
+                messages={[...chatHistory, ...messages]}
                 sendMessage={sendMessage}
                 activeUsers={activeUsers}
               />
