@@ -14,7 +14,6 @@ export const AuthProvider = ({ children }) => {
     if (token && userData && isTokenValid(token)) {
       setUser(JSON.parse(userData));
     } else {
-      // Remove invalid/expired token
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       setUser(null);
@@ -35,7 +34,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await authService.logout();
+    authService.logout();
     setUser(null);
   };
 

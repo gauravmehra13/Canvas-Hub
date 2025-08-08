@@ -28,15 +28,9 @@ class AuthService {
   }
 
   // Logout current user
-  async logout() {
-    try {
-      await api.post('/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-    }
+  logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   }
 }
 
