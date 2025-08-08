@@ -1,5 +1,6 @@
-import { createContext, useState, useEffect } from 'react';
-import authService from '../services/authService';
+import { createContext, useState, useEffect } from "react";
+import authService from "../services/authService";
+import { isTokenValid } from "../utils/authUtils";
 
 const AuthContext = createContext();
 
@@ -8,11 +9,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in on mount
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    if (token && userData) {
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
+    if (token && userData && isTokenValid(token)) {
       setUser(JSON.parse(userData));
+    } else {
+      // Remove invalid/expired token
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setUser(null);
     }
     setLoading(false);
   }, []);
@@ -39,7 +44,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    loading
+    loading,
   };
 
   return (
