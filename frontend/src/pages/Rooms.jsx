@@ -172,19 +172,23 @@ const Rooms = () => {
             </div>
           </div>
         ) : (
-          <div className={commonClasses.gridCards}>
+          <div className={commonClasses.gridCards + " gap-4"}>
             {rooms.map((room) => (
               <div
                 key={room._id}
                 onClick={() => handleJoinRoom(room)}
-                className={`${theme.card.base} ${theme.card.interactive} p-4 relative overflow-hidden`}
+                className={
+                  theme.card.roomCard +
+                  " p-4 min-h-[120px] flex flex-col justify-between relative"
+                }
+                tabIndex={0}
+                role="button"
+                aria-label={`Join room ${room.name}`}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-blue-600/0 to-blue-600/0 group-hover:from-blue-600/5 group-hover:via-blue-600/5 group-hover:to-blue-600/0 transition-all duration-300" />
-
-                <div className="relative">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                      {room.name}
+                <div className="relative z-20 flex flex-col h-full">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-base text-gray-900 dark:text-white flex items-center gap-2">
+                      <span className="truncate">{room.name}</span>
                       {room.isPrivate && (
                         <Lock className="h-4 w-4 text-amber-500" />
                       )}
@@ -206,13 +210,15 @@ const Rooms = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                    <Users className="h-4 w-4" />
-                    <span className="flex-1">
-                      {room.activeUsers}/{room.maxUsers} users
-                    </span>
+                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-auto">
+                    <div className="flex items-center gap-1">
+                      <Users className="h-4 w-4" />
+                      <span>
+                        {room.activeUsers}/{room.maxUsers} users
+                      </span>
+                    </div>
                     {room.activeUsers >= room.maxUsers && (
-                      <span className="px-2 py-1 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded">
+                      <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded">
                         Full
                       </span>
                     )}
