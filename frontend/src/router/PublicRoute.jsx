@@ -1,11 +1,12 @@
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import Loader from "../components/Loader";
 
 const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return null; // or a loading spinner
+    return <Loader />;
   }
 
   if (user) {
@@ -15,4 +16,4 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
-export default PublicRoute; 
+export default PublicRoute;

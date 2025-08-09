@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 import authService from "../services/authService";
-import { isTokenValid } from "../utils/authUtils";
+import api from "../api";
 
 const AuthContext = createContext();
 
@@ -9,16 +9,16 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
-    if (token && userData && isTokenValid(token)) {
-      setUser(JSON.parse(userData));
-    } else {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      setUser(null);
-    }
-    setLoading(false);
+    const checkAuth = async () => {
+      try {
+        const response = await api.get("/auth/check-auth");
+        setUser(response.data.user);
+      } catch {
+        setUser(null);
+      }
+      setLoading(false);
+    };
+    checkAuth();
   }, []);
 
   const login = async (username, password) => {

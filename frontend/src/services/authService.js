@@ -1,37 +1,32 @@
-import api from '../api';
+import api from "../api";
 
 class AuthService {
   // Login user with username and password
   async login(username, password) {
     try {
-      const response = await api.post('/auth/login', { username, password });
-      const { token, user } = response.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      return { token, user };
+      const response = await api.post("/auth/login", { username, password });
+      const { user } = response.data;
+      return { user };
     } catch (error) {
-      throw error.response?.data?.error || 'Login failed';
+      throw error.response?.data?.error || "Login failed";
     }
   }
 
   // Register new user with username and password
   async register(username, password) {
     try {
-      const response = await api.post('/auth/register', { username, password });
-      const { token, user } = response.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      return { token, user };
+      const response = await api.post("/auth/register", { username, password });
+      const { user } = response.data;
+      return { user };
     } catch (error) {
-      throw error.response?.data?.error || 'Registration failed';
+      throw error.response?.data?.error || "Registration failed";
     }
   }
 
   // Logout current user
-  logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+  async logout() {
+    await api.post("/auth/logout");
   }
 }
 
-export default new AuthService(); 
+export default new AuthService();
