@@ -35,7 +35,9 @@ const drawingSchema = new mongoose.Schema({
     strokeWidth: Number,
     fill: String,
     pointerLength: Number,
-    pointerWidth: Number
+    pointerWidth: Number,
+    text: String,
+    fontSize: Number
   }],
   timestamp: {
     type: Date,

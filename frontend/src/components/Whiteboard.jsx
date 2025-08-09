@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Stage, Layer, Line, Circle, Rect, Arrow } from "react-konva";
+import { createPortal } from "react-dom";
+import { Stage, Layer, Line, Circle, Rect, Arrow, Text } from "react-konva";
 import { useRoom } from "../hooks/useRoom";
 import {
   Pen,
@@ -13,6 +14,7 @@ import {
   Trash2,
   PaintBucket,
   Save,
+  Type as TypeIcon,
 } from "lucide-react";
 import drawingService from "../services/drawingService";
 import toast from "react-hot-toast";
@@ -24,6 +26,7 @@ const TOOLS = {
   CIRCLE: "circle",
   ARROW: "arrow",
   LINE: "line",
+  TEXT: "text",
 };
 
 const ToolButton = ({ isActive, onClick, children, title, isDisabled }) => (
@@ -32,7 +35,7 @@ const ToolButton = ({ isActive, onClick, children, title, isDisabled }) => (
     disabled={isDisabled}
     className={`cursor-pointer p-2 rounded-lg transition-all duration-200 ${
       isDisabled
-        ? "opacity-50 cursor-not-allowed"
+        ? "opacity-50 cursor-not-allowed text-gray-400"
         : isActive
         ? "bg-blue-600 text-white shadow-inner"
         : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
@@ -57,6 +60,8 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
   const autoSaveIntervalRef = useRef(null);
   const currentDataRef = useRef({ lines: [], shapes: [] });
   const { canvasData } = useRoom(roomId);
+  const [editingText, setEditingText] = useState(null); // { x, y, value }
+  const textAreaRef = useRef(null);
 
   //  current data ref
   useEffect(() => {
@@ -65,7 +70,21 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
 
   const stageRef = useRef(null);
   const containerRef = useRef(null);
+  const stageWrapperRef = useRef(null);
   const isDrawingRef = useRef(false);
+
+  // focus textarea when entering text edit mode
+  useEffect(() => {
+    if (editingText && textAreaRef.current) {
+      console.log("[Whiteboard] textarea mount/focus at dom:", {
+        domX: editingText.domX,
+        domY: editingText.domY,
+        x: editingText.x,
+        y: editingText.y,
+      });
+      textAreaRef.current.focus();
+    }
+  }, [editingText]);
 
   const updateStageDimensions = useCallback(() => {
     if (containerRef.current) {
@@ -180,6 +199,15 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
       if (lastDrawing.type === "line") {
         setLines((prev) => [...prev, lastDrawing]);
       } else if (lastDrawing.type === "shape") {
+        if (lastDrawing.shapeType === "text") {
+          console.log("[Whiteboard] received text shape:", {
+            text: lastDrawing.text,
+            x: lastDrawing.x,
+            y: lastDrawing.y,
+            fontSize: lastDrawing.fontSize,
+            fill: lastDrawing.fill,
+          });
+        }
         const newShape = {
           type: lastDrawing.shapeType,
           x: lastDrawing.x,
@@ -193,6 +221,8 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
           fill: lastDrawing.fill,
           pointerLength: lastDrawing.pointerLength,
           pointerWidth: lastDrawing.pointerWidth,
+          text: lastDrawing.text,
+          fontSize: lastDrawing.fontSize,
         };
         setShapes((prev) => [...prev, newShape]);
       } else if (lastDrawing.type === "clear") {
@@ -208,16 +238,66 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
     }
   }, [canvasData]);
 
-  const addToHistory = (newLines, newShapes) => {
-    const newHistory = history.slice(0, historyStep + 1);
-    newHistory.push({ lines: newLines, shapes: newShapes });
-    setHistory(newHistory);
-    setHistoryStep(newHistory.length - 1);
-  };
+  const addToHistory = useCallback(
+    (newLines, newShapes) => {
+      const newHistory = history.slice(0, historyStep + 1);
+      newHistory.push({ lines: newLines, shapes: newShapes });
+      setHistory(newHistory);
+      setHistoryStep(newHistory.length - 1);
+    },
+    [history, historyStep]
+  );
 
   const handleMouseDown = (e) => {
     isDrawingRef.current = true;
-    const pos = e.target.getStage().getPointerPosition();
+    const stage = stageRef.current || e.target.getStage();
+    if (!stage) {
+      console.warn("[Whiteboard] No stage ref available on mousedown");
+      return;
+    }
+    const pos = stage.getPointerPosition();
+
+    if (tool === TOOLS.TEXT) {
+      if (editingText) {
+        // commit previous text before starting a new one
+        commitTextEditing();
+      }
+      const pointer = stage.getPointerPosition();
+      if (!pointer) {
+        console.warn("[Whiteboard] No pointer position for text click");
+        isDrawingRef.current = false;
+        return;
+      }
+      const stageRect = stage.container().getBoundingClientRect();
+      const wrapperRect = stageWrapperRef.current
+        ? stageWrapperRef.current.getBoundingClientRect()
+        : { left: 0, top: 0 };
+      const domX = stageRect.left - wrapperRect.left + pointer.x;
+      const domY = stageRect.top - wrapperRect.top + pointer.y;
+      const pageDomX = stageRect.left + pointer.x;
+      const pageDomY = stageRect.top + pointer.y;
+      console.log("[Whiteboard] text mousedown:", {
+        stageX: pointer.x,
+        stageY: pointer.y,
+        domX,
+        domY,
+        pageDomX,
+        pageDomY,
+      });
+      // if already editing somewhere else, commit before starting new
+      // here we just commit on blur via setEditingText; start new editing
+      setEditingText({
+        x: pointer.x,
+        y: pointer.y,
+        domX,
+        domY,
+        pageDomX,
+        pageDomY,
+        value: "",
+      });
+      isDrawingRef.current = false;
+      return;
+    }
 
     if (tool === TOOLS.PEN || tool === TOOLS.ERASER) {
       const newLine = {
@@ -354,6 +434,48 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
     }
   };
 
+  const commitTextEditing = useCallback(
+    (opts = { cancel: false }) => {
+      if (!editingText) return;
+      const value = (editingText.value || "").trim();
+      const shouldCancel = opts.cancel || value.length === 0;
+      if (shouldCancel) {
+        setEditingText(null);
+        return;
+      }
+
+      const fontSizePx = Math.max(brushSize, 16);
+      const finalShape = {
+        type: "text",
+        x: editingText.x,
+        y: editingText.y,
+        text: editingText.value,
+        fill: "#000000", // force black for debug visibility
+        fontSize: fontSizePx,
+      };
+      const newShapes = [...shapes, finalShape];
+      setShapes(newShapes);
+      setEditingText(null);
+
+      console.log(
+        "[Whiteboard] commitTextEditing -> adding shape:",
+        finalShape
+      );
+
+      sendDrawing({
+        type: "shape",
+        shapeType: "text",
+        x: finalShape.x,
+        y: finalShape.y,
+        text: finalShape.text,
+        fill: finalShape.fill,
+        fontSize: finalShape.fontSize,
+      });
+      addToHistory(lines, newShapes);
+    },
+    [editingText, brushSize, shapes, lines, addToHistory, sendDrawing]
+  );
+
   const handleUndo = () => {
     if (historyStep > 0) {
       const newStep = historyStep - 1;
@@ -389,6 +511,7 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
     setShapes([]);
     setHistory([{ lines: [], shapes: [] }]);
     setHistoryStep(0);
+    setEditingText(null);
     sendDrawing({ type: "clear" });
   };
 
@@ -418,6 +541,13 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
               title="Line Tool (L)"
             >
               <Slash className="h-4 w-4" />
+            </ToolButton>
+            <ToolButton
+              isActive={tool === TOOLS.TEXT}
+              onClick={() => setTool(TOOLS.TEXT)}
+              title="Text Tool (T)"
+            >
+              <TypeIcon className="h-4 w-4" />
             </ToolButton>
             <ToolButton
               isActive={tool === TOOLS.CIRCLE}
@@ -528,7 +658,7 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden relative" ref={stageWrapperRef}>
         <Stage
           width={stageSize.width}
           height={stageSize.height}
@@ -544,8 +674,11 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
               TOOLS.RECTANGLE,
               TOOLS.ARROW,
               TOOLS.LINE,
+              TOOLS.TEXT,
             ].includes(tool)
-              ? "crosshair"
+              ? tool === TOOLS.TEXT
+                ? "text"
+                : "crosshair"
               : "default",
           }}
         >
@@ -565,6 +698,16 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
                   radius={shape.radius}
                   stroke={shape.stroke}
                   strokeWidth={shape.strokeWidth}
+                />
+              ) : shape.type === "text" ? (
+                <Text
+                  key={i}
+                  x={shape.x}
+                  y={shape.y}
+                  text={shape.text}
+                  fontSize={shape.fontSize || 16}
+                  fill={shape.fill || "#000"}
+                  fontFamily="Calibri, Arial, sans-serif"
                 />
               ) : shape.type === "arrow" ? (
                 <Arrow
@@ -638,6 +781,84 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
               ))}
           </Layer>
         </Stage>
+
+        {editingText &&
+          createPortal(
+            <div
+              style={{
+                position: "absolute",
+                // Position relative to the stage wrapper to avoid page overflow/scrollbars
+                left: editingText.domX ?? editingText.x,
+                top: editingText.domY ?? editingText.y,
+                zIndex: 999999,
+              }}
+            >
+              <textarea
+                ref={textAreaRef}
+                value={editingText.value}
+                onChange={(e) =>
+                  setEditingText((prev) => ({ ...prev, value: e.target.value }))
+                }
+                // Do NOT commit on blur to avoid instant disappearance
+                onBlur={() =>
+                  console.log("[Whiteboard] textarea blur (ignored)")
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    commitTextEditing({ cancel: true });
+                  } else if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    commitTextEditing();
+                  }
+                }}
+                style={{
+                  fontSize: `${Math.max(brushSize, 16)}px`,
+                  color: "#000",
+                  padding: 4,
+                  margin: 0,
+                  border: "1px solid rgba(0,0,0,0.4)",
+                  outline: "none",
+                  background: "rgba(255,255,255,0.98)",
+                  whiteSpace: "pre",
+                  lineHeight: 1.3,
+                  minWidth: "120px",
+                  minHeight: "28px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                  fontFamily: "Calibri, Arial, sans-serif",
+                }}
+                placeholder="Type... (Enter to commit)"
+              />
+              <button
+                type="button"
+                onClick={() => commitTextEditing({ cancel: true })}
+                title="Cancel (Esc)"
+                aria-label="Cancel text"
+                style={{
+                  position: "absolute",
+                  right: -10,
+                  top: -10,
+                  width: 22,
+                  height: 22,
+                  borderRadius: 9999,
+                  border: "1px solid rgba(0,0,0,0.4)",
+                  background: "#fff",
+                  color: "#111",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  lineHeight: 1,
+                }}
+              >
+                ×
+              </button>
+            </div>,
+            // Render inside the stage wrapper so the overlay doesn't expand the page
+            stageWrapperRef.current || document.body
+          )}
       </div>
     </div>
   );
