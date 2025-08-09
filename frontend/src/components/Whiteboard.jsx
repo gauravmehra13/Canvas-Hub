@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Stage, Layer, Line, Circle, Rect, Arrow, Text } from "react-konva";
 import { useRoom } from "../hooks/useRoom";
@@ -197,7 +197,10 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
     if (canvasData.length > 0) {
       const lastDrawing = canvasData[canvasData.length - 1];
       if (lastDrawing.type === "line") {
-        setLines((prev) => [...prev, lastDrawing]);
+        setLines((prev) => [
+          ...prev,
+          { ...lastDrawing, createdAt: lastDrawing.createdAt || lastDrawing.timestamp || Date.now() },
+        ]);
       } else if (lastDrawing.type === "shape") {
         if (lastDrawing.shapeType === "text") {
           console.log("[Whiteboard] received text shape:", {
@@ -223,6 +226,7 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
           pointerWidth: lastDrawing.pointerWidth,
           text: lastDrawing.text,
           fontSize: lastDrawing.fontSize,
+          createdAt: lastDrawing.createdAt || lastDrawing.timestamp || Date.now(),
         };
         setShapes((prev) => [...prev, newShape]);
       } else if (lastDrawing.type === "clear") {
@@ -237,6 +241,17 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
       }
     }
   }, [canvasData]);
+
+  // Compose a single, chronologically ordered list for correct compositing
+  const drawables = useMemo(() => {
+    const shapesWithKind = shapes.map((s) => ({ ...s, __kind: "shape" }));
+    const linesWithKind = lines.map((l) => ({ ...l, __kind: "line" }));
+    return [...shapesWithKind, ...linesWithKind].sort((a, b) => {
+      const at = a.createdAt || 0;
+      const bt = b.createdAt || 0;
+      return at - bt;
+    });
+  }, [shapes, lines]);
 
   const addToHistory = useCallback(
     (newLines, newShapes) => {
@@ -311,6 +326,7 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
         lineJoin: "round",
         globalCompositeOperation:
           tool === TOOLS.ERASER ? "destination-out" : "source-over",
+        createdAt: Date.now(),
       };
       setLines([...lines, newLine]);
     } else {
@@ -406,13 +422,13 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
     if (tool === TOOLS.PEN || tool === TOOLS.ERASER) {
       const lastLine = lines[lines.length - 1];
       if (lastLine && lastLine.points.length > 2) {
-        sendDrawing({ type: "line", ...lastLine });
+        sendDrawing({ type: "line", ...lastLine, createdAt: lastLine.createdAt });
         addToHistory([...lines], shapes);
       } else {
         setLines(lines.slice(0, -1));
       }
     } else if (tempShape) {
-      const finalShape = { ...tempShape };
+      const finalShape = { ...tempShape, createdAt: Date.now() };
       setShapes([...shapes, finalShape]);
       setTempShape(null);
       sendDrawing({
@@ -429,6 +445,7 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
         fill: finalShape.fill,
         pointerLength: finalShape.pointerLength,
         pointerWidth: finalShape.pointerWidth,
+        createdAt: finalShape.createdAt,
       });
       addToHistory(lines, [...shapes, finalShape]);
     }
@@ -452,6 +469,7 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
         text: editingText.value,
         fill: "#000000", // force black for debug visibility
         fontSize: fontSizePx,
+        createdAt: Date.now(),
       };
       const newShapes = [...shapes, finalShape];
       setShapes(newShapes);
@@ -470,6 +488,7 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
         text: finalShape.text,
         fill: finalShape.fill,
         fontSize: finalShape.fontSize,
+        createdAt: finalShape.createdAt,
       });
       addToHistory(lines, newShapes);
     },
@@ -689,60 +708,68 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
               fill="#ffffff"
             />
 
-            {shapes.map((shape, i) =>
-              shape.type === "circle" ? (
-                <Circle
-                  key={i}
-                  x={shape.x}
-                  y={shape.y}
-                  radius={shape.radius}
-                  stroke={shape.stroke}
-                  strokeWidth={shape.strokeWidth}
-                />
-              ) : shape.type === "text" ? (
-                <Text
-                  key={i}
-                  x={shape.x}
-                  y={shape.y}
-                  text={shape.text}
-                  fontSize={shape.fontSize || 16}
-                  fill={shape.fill || "#000"}
-                  fontFamily="Calibri, Arial, sans-serif"
-                />
-              ) : shape.type === "arrow" ? (
-                <Arrow
-                  key={i}
-                  points={shape.points}
-                  stroke={shape.stroke}
-                  strokeWidth={shape.strokeWidth}
-                  fill={shape.fill}
-                  pointerLength={shape.pointerLength}
-                  pointerWidth={shape.pointerWidth}
-                />
-              ) : shape.type === "line" ? (
-                <Line
-                  key={i}
-                  points={shape.points}
-                  stroke={shape.stroke}
-                  strokeWidth={shape.strokeWidth}
-                  lineCap="round"
-                />
-              ) : (
+            {drawables.map((item, i) => {
+              if (item.__kind === "line" && item.tool) {
+                return <Line key={`l-${i}`} {...item} />;
+              }
+              if (item.type === "circle") {
+                return (
+                  <Circle
+                    key={`s-${i}`}
+                    x={item.x}
+                    y={item.y}
+                    radius={item.radius}
+                    stroke={item.stroke}
+                    strokeWidth={item.strokeWidth}
+                  />
+                );
+              } else if (item.type === "text") {
+                return (
+                  <Text
+                    key={`s-${i}`}
+                    x={item.x}
+                    y={item.y}
+                    text={item.text}
+                    fontSize={item.fontSize || 16}
+                    fill={item.fill || "#000"}
+                    fontFamily="Calibri, Arial, sans-serif"
+                  />
+                );
+              } else if (item.type === "arrow") {
+                return (
+                  <Arrow
+                    key={`s-${i}`}
+                    points={item.points}
+                    stroke={item.stroke}
+                    strokeWidth={item.strokeWidth}
+                    fill={item.fill}
+                    pointerLength={item.pointerLength}
+                    pointerWidth={item.pointerWidth}
+                  />
+                );
+              } else if (item.type === "line") {
+                return (
+                  <Line
+                    key={`s-${i}`}
+                    points={item.points}
+                    stroke={item.stroke}
+                    strokeWidth={item.strokeWidth}
+                    lineCap="round"
+                  />
+                );
+              }
+              return (
                 <Rect
-                  key={i}
-                  x={shape.x}
-                  y={shape.y}
-                  width={shape.width}
-                  height={shape.height}
-                  stroke={shape.stroke}
-                  strokeWidth={shape.strokeWidth}
+                  key={`s-${i}`}
+                  x={item.x}
+                  y={item.y}
+                  width={item.width}
+                  height={item.height}
+                  stroke={item.stroke}
+                  strokeWidth={item.strokeWidth}
                 />
-              )
-            )}
-
-            {lines.map((line, i) => (
-              <Line key={i} {...line} />
-            ))}
+              );
+            })}
 
             {tempShape &&
               (tempShape.type === "circle" ? (
