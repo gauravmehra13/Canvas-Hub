@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const http = require("http");
-const mongoose = require("mongoose");
+const connectDB = require("./config/db");
 const cors = require("cors");
 const socketio = require("socket.io");
 const helmet = require("helmet");
@@ -35,17 +35,10 @@ const io = socketio(server, {
   },
 });
 
-// MongoDB connection
-mongoose
-  .connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+// Connect to MongoDB
+connectDB();
 
 // Routes
-
 app.use("/api/auth", authRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/rooms", drawingRoutes);
