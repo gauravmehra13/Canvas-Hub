@@ -7,6 +7,7 @@ import {
   Circle as CircleIcon,
   Square,
   ArrowUpRight,
+  Slash,
   Undo2,
   Redo2,
   Trash2,
@@ -22,6 +23,7 @@ const TOOLS = {
   RECTANGLE: "rectangle",
   CIRCLE: "circle",
   ARROW: "arrow",
+  LINE: "line",
 };
 
 const ToolButton = ({ isActive, onClick, children, title, isDisabled }) => (
@@ -238,6 +240,8 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
             ? "circle"
             : tool === TOOLS.ARROW
             ? "arrow"
+            : tool === TOOLS.LINE
+            ? "line"
             : "rect",
         x: pos.x,
         y: pos.y,
@@ -246,7 +250,10 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
         radius: 0,
         startX: pos.x, // Store the initial X position
         startY: pos.y, // Store the initial Y position
-        points: tool === TOOLS.ARROW ? [pos.x, pos.y, pos.x, pos.y] : undefined,
+        points:
+          tool === TOOLS.ARROW || tool === TOOLS.LINE
+            ? [pos.x, pos.y, pos.x, pos.y]
+            : undefined,
         stroke: color,
         strokeWidth: brushSize,
         draggable: false,
@@ -295,6 +302,11 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
         setTempShape({
           ...tempShape,
           points: [tempShape.x, tempShape.y, pos.x, pos.y],
+        });
+      } else if (tool === TOOLS.LINE) {
+        setTempShape({
+          ...tempShape,
+          points: [tempShape.startX, tempShape.startY, pos.x, pos.y],
         });
       } else {
         setTempShape({
@@ -399,6 +411,13 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
               title="Eraser Tool (E)"
             >
               <Eraser className="h-4 w-4" />
+            </ToolButton>
+            <ToolButton
+              isActive={tool === TOOLS.LINE}
+              onClick={() => setTool(TOOLS.LINE)}
+              title="Line Tool (L)"
+            >
+              <Slash className="h-4 w-4" />
             </ToolButton>
             <ToolButton
               isActive={tool === TOOLS.CIRCLE}
@@ -520,7 +539,14 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
           onMouseLeave={handleMouseUp}
           style={{
             backgroundColor: "#fff",
-            cursor: tool === TOOLS.CIRCLE ? "crosshair" : "default",
+            cursor: [
+              TOOLS.CIRCLE,
+              TOOLS.RECTANGLE,
+              TOOLS.ARROW,
+              TOOLS.LINE,
+            ].includes(tool)
+              ? "crosshair"
+              : "default",
           }}
         >
           <Layer>
@@ -549,6 +575,14 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
                   fill={shape.fill}
                   pointerLength={shape.pointerLength}
                   pointerWidth={shape.pointerWidth}
+                />
+              ) : shape.type === "line" ? (
+                <Line
+                  key={i}
+                  points={shape.points}
+                  stroke={shape.stroke}
+                  strokeWidth={shape.strokeWidth}
+                  lineCap="round"
                 />
               ) : (
                 <Rect
@@ -584,6 +618,13 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
                   fill={tempShape.fill}
                   pointerLength={tempShape.pointerLength}
                   pointerWidth={tempShape.pointerWidth}
+                />
+              ) : tempShape.type === "line" ? (
+                <Line
+                  points={tempShape.points}
+                  stroke={tempShape.stroke}
+                  strokeWidth={tempShape.strokeWidth}
+                  lineCap="round"
                 />
               ) : (
                 <Rect
