@@ -4,32 +4,31 @@ A real-time collaborative whiteboard application built with the MERN stack (Mong
 
 ## 📸 Product Screenshots
 
-![Whiteboard Interface](/frontend/public/project_images/1.png)
-![Room Management](/frontend/public/project_images/2.png)
-![Live Collaboration](/frontend/public/project_images/3.png)
+![Room Management](/frontend/public/project_images/1.png)
+![Live Collaboration](/frontend/public/project_images/2.png)
 
 ## ✨ Features
 
-- **Real-time Collaboration**: Multiple users can draw and interact simultaneously
-- **Room Management**: Create and join private/public rooms
-- **Live Chat**: Built-in chat functionality for room participants
-- **User Presence**: See who's currently active in the room
+- **Real-time Collaboration**: Multiple users can draw and interact on the whiteboard at the same time
+- **Room Management**: Easily create and join both private and public rooms
+- **Live Chat**: Communicate instantly with other participants in each room
+- **User Presence**: See which users are currently active in your room
 - **Whiteboard Tools**:
-  - Drawing tools
-  - Shape creation
-  - Text addition
-  - Undo/Redo functionality
-  - Clear board option
+  - Freehand drawing tools
+  - Shape creation (rectangles, circles, arrows, and more)
+  - Add text directly on the canvas
+  - Undo and redo your actions
+  - Clear the entire board with one click
+- **Persistent Whiteboard & Chat**: All drawings and conversations are automatically saved and securely persisted, so you never lose your work. You can also manually save your whiteboard at any time for extra peace of mind.
 
 ## 🛠️ Tech Stack
 
 ### Frontend
 
-- **React** (v19) 
+- **React** (v19)
 - **Socket.IO Client** for real-time communication
 - **Konva.js** for canvas manipulation
 - **TailwindCSS** for styling
-- **Zustand** for state management
 - **React Router** for navigation
 - **React Hot Toast** for notifications
 
@@ -69,6 +68,7 @@ PORT=5000
 MONGO_URI=your_mongodb_uri
 JWT_SECRET=your_jwt_secret
 CLIENT_URL=your_frontend_url
+NODE_ENV=production/development
 # Start the server
 npm start
 ```

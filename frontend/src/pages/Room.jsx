@@ -130,10 +130,17 @@ const Room = () => {
       {/* Header */}
       <div>
         <div className={theme.layout.container}>
-          <div className={commonClasses.flexBetween + " py-3"}>
+          <div
+            className={
+              commonClasses.flexBetween + " py-3 flex-col md:flex-row gap-2"
+            }
+          >
             <div className="flex items-center gap-4">
               <button
-                onClick={() => navigate("/rooms")}
+                onClick={() => {
+                  navigate("/rooms");
+                  toast.success("Left room successfully");
+                }}
                 className={
                   commonClasses.iconButton + " text-gray-600 dark:text-gray-300"
                 }
@@ -169,11 +176,11 @@ const Room = () => {
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
         <div className={theme.layout.container + " h-full"}>
-          <div className="flex h-full">
-            <div className="flex-1 min-w-0">
+          <div className="flex flex-col md:flex-row h-full gap-2">
+            <div className="flex-1 min-w-0 overflow-hidden">
               <Whiteboard roomId={id} sendDrawing={sendDrawing} />
             </div>
-            <div className="w-96 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div className="w-full md:w-96 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <Chat
                 messages={[...chatHistory, ...messages]}
                 sendMessage={sendMessage}

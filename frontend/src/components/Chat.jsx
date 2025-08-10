@@ -90,20 +90,21 @@ const Chat = ({ messages, sendMessage, activeUsers }) => {
           </div>
 
           <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-            <form onSubmit={handleSubmit} className="flex gap-2">
+            <form onSubmit={handleSubmit} className="flex gap-3 items-center">
               <input
                 type="text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Type a message..."
-                className={theme.input.base}
+                className={theme.input.base + " flex-1"}
               />
               <button
                 type="submit"
-                className={theme.button.primary + " !p-2"}
+                className={theme.button.primary + " px-4 py-2 flex items-center justify-center"}
+                style={{ minWidth: 44, minHeight: 40 }}
                 disabled={!message.trim()}
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-5 w-5" />
               </button>
             </form>
           </div>

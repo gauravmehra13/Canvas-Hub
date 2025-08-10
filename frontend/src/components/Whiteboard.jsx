@@ -89,8 +89,8 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
   const updateStageDimensions = useCallback(() => {
     if (containerRef.current) {
       const container = containerRef.current;
-      const containerWidth = container.offsetWidth - 20; // Subtract margin
-      const containerHeight = window.innerHeight - container.offsetTop - 40; // Subtract margins and padding
+      const containerWidth = container.offsetWidth;
+      const containerHeight = window.innerHeight - container.offsetTop - 20; 
       setStageSize({
         width: Math.max(800, containerWidth),
         height: Math.max(600, containerHeight),
@@ -883,7 +883,6 @@ const Whiteboard = ({ roomId, sendDrawing }) => {
                 ×
               </button>
             </div>,
-            // Render inside the stage wrapper so the overlay doesn't expand the page
             stageWrapperRef.current || document.body
           )}
       </div>
