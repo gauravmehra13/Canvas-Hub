@@ -6,7 +6,7 @@ import { ArrowLeft, Users, Lock, LogOut } from "lucide-react";
 import { theme, commonClasses } from "../styles/theme";
 import Whiteboard from "../components/Whiteboard";
 import Chat from "../components/Chat";
-import api from "../api";
+import roomService from "../services/roomService";
 import toast from "react-hot-toast";
 import chatService from "../services/chatService";
 
@@ -39,8 +39,7 @@ const Room = () => {
   useEffect(() => {
     const fetchRoom = async () => {
       try {
-        const res = await api.get(`/rooms/${id}`);
-        const roomData = res.data;
+        const roomData = await roomService.getRoomById(id);
 
         // Check if room is full
         if (roomData.activeUsers >= roomData.maxUsers) {
@@ -100,7 +99,7 @@ const Room = () => {
   const handleLeaveRoom = async () => {
     try {
       // Update database
-      await api.post(`/rooms/${id}/leave`);
+      await roomService.leaveRoom(id);
 
       // Use the leaveRoom function from useRoom hook
       leaveRoom();

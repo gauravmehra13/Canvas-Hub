@@ -27,6 +27,16 @@ class AuthService {
   async logout() {
     await api.post("/auth/logout");
   }
+
+  // Check if user is authenticated
+  async checkAuth() {
+    try {
+      const response = await api.get("/auth/check-auth");
+      return { user: response.data.user };
+    } catch (error) {
+      throw error.response?.data?.error || "Authentication check failed";
+    }
+  }
 }
 
 export default new AuthService();

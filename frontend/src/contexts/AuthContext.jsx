@@ -1,6 +1,5 @@
 import { createContext, useState, useEffect } from "react";
 import authService from "../services/authService";
-import api from "../api";
 
 const AuthContext = createContext();
 
@@ -11,8 +10,8 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await api.get("/auth/check-auth");
-        setUser(response.data.user);
+        const { user } = await authService.checkAuth();
+        setUser(user);
       } catch {
         setUser(null);
       }
@@ -46,11 +45,7 @@ export const AuthProvider = ({ children }) => {
     loading,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export default AuthContext;

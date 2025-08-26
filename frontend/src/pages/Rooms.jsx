@@ -13,7 +13,7 @@ import { theme, commonClasses, animations } from "../styles/theme";
 import CreateRoomModal from "../components/CreateRoomModal";
 import JoinRoomModal from "../components/JoinRoomModal";
 import DeleteRoomModal from "../components/DeleteRoomModal";
-import api from "../api";
+import roomService from "../services/roomService";
 import toast from "react-hot-toast";
 import { useAuth } from "../hooks/useAuth";
 import Loader from "../components/Loader";
@@ -32,8 +32,8 @@ const Rooms = () => {
   const fetchRooms = async () => {
     try {
       setIsRefreshing(true);
-      const res = await api.get("/rooms");
-      setRooms(res.data);
+      const rooms = await roomService.getRooms();
+      setRooms(rooms);
     } catch (error) {
       setError("Failed to fetch rooms: " + error.message);
     } finally {
@@ -48,19 +48,19 @@ const Rooms = () => {
 
   const handleCreateRoom = async (formData) => {
     try {
-      const res = await api.post("/rooms", formData);
-      setRooms([...rooms, res.data]);
+      const newRoom = await roomService.createRoom(formData);
+      setRooms([...rooms, newRoom]);
       setShowCreateModal(false);
       toast.success("Room created successfully");
 
       if (formData.isPrivate) {
         localStorage.setItem(
-          `room_${res.data._id}_password`,
+          `room_${newRoom._id}_password`,
           formData.password
         );
       }
 
-      navigate(`/rooms/${res.data._id}`);
+      navigate(`/rooms/${newRoom._id}`);
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to create room");
     }
@@ -95,7 +95,7 @@ const Rooms = () => {
     if (!roomToDelete) return;
 
     try {
-      await api.delete(`/rooms/${roomToDelete._id}`);
+      await roomService.deleteRoom(roomToDelete._id);
       setRooms(rooms.filter((room) => room._id !== roomToDelete._id));
       toast.success("Room deleted successfully");
     } catch (err) {
